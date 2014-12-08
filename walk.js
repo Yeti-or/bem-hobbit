@@ -1,3 +1,8 @@
+#!/usr/bin/env node
+'use strict';
+
+process.bin = process.title = 'deps-analyzer';
+
 
 var walk = require('bem-walk'),
     fs = require('fs');
