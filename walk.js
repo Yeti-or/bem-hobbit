@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-process.bin = process.title = 'deps-analyzer';
+process.bin = process.title = 'TheHobbit';
 
 
 var walk = require('bem-walk'),

@@ -1,5 +1,5 @@
 {
-  "name": "data-analyzer",
+  "name": "TheHobbit",
   "version": "0.0.1",
   "description": "Analyze BEM deps",
   "main": "walk.js",
