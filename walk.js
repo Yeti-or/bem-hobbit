@@ -100,14 +100,18 @@ function flat(tree) {
 
 function shouldResponse() {
     if (n === p) {
-        var block = blocks[blockName];
-        if (block) {
-            there(block);
-            var all = flat(block);
-            res.end(blockName + ' : ' + Object.keys(all).join(', ') + '\n');
-        } else {
-            res.end('No such block\n');
-        }
+        ((blockName && [blockName]) || Object.keys(blocks)).forEach(function(blockName) {
+            res.write(blockName + ' : ');
+            block = blocks[blockName];
+            if (!block) {
+                res.write('No such block\n')
+            } else {
+                there(block);
+                var all = flat(block);
+                res.write(Object.keys(all).join(', ') + '\n');
+            }
+        });
+        res.end('\t^_^\n');
     }
 }
 
