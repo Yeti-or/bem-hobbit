@@ -10,7 +10,12 @@ require('http').createServer(function (req, res) {
 
 var walk = require('bem-walk'),
     fs = require('fs');
-var walker = walk(['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks']);
+
+var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks']
+var DEPS_TYPES =['mustDeps', 'shouldDeps'];
+
+var walker = walk(LEVELS);
+
 
 var blockName = process.argv[2];
 
@@ -60,8 +65,9 @@ function there(block) {
             });
         }
 
-        block.mustDeps = proceedDeps(block.mustDeps);
-        block.shouldDeps = proceedDeps(block.shouldDeps);
+        DEPS_TYPES.forEach(function(depType) {
+            block[depType] = proceedDeps(block[depType]);
+        });
     }
 
     proceedBemObj(block);
@@ -77,8 +83,9 @@ function traverse(tree, callback) {
         });
     }
 
-    proceedDeps(tree.mustDeps);
-    proceedDeps(tree.shouldDeps);
+    DEPS_TYPES.forEach(function(depType) {
+        proceedDeps(tree[depType]);
+    });
 }
 
 function flat(tree) {
@@ -111,8 +118,10 @@ walker.on('data', function (bemObject) {
     if (bemObject.tech === 'deps.js') {
         //put in hash blockName --> blockObj
         blocks[bemObject.block] = blocks[bemObject.block] || bemObject;
-        blocks[bemObject.block].mustDeps = [];
-        blocks[bemObject.block].shouldDeps = [];
+
+        DEPS_TYPES.forEach(function(depType) {
+            blocks[bemObject.block][depType] = [];
+        });
 
         n++;
         fs.readFile(bemObject.path, 'utf8', function(err, data) {
@@ -130,13 +139,10 @@ walker.on('data', function (bemObject) {
                 }
 
                 //TODO: noDeps: []
-
-                [].concat(dep.mustDeps).forEach(function(dep) {
-                    dep && blocks[bemObject.block].mustDeps.push(dep);
-                });
-
-                [].concat(dep.shouldDeps).forEach(function(dep) {
-                    dep && blocks[bemObject.block].shouldDeps.push(dep);
+                DEPS_TYPES.forEach(function(depType) {
+                    [].concat(dep[depType]).forEach(function(dep) {
+                        dep && blocks[bemObject.block][depType].push(dep);
+                    });
                 });
             });
 
