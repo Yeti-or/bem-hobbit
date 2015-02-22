@@ -71,9 +71,10 @@ function shouldResponse() {
         var block = blocks[blockName];
         if (block) {
             there(block);
+            var all = Object.keys(flat(block));
             var must = ('Block : ' + block.bem + ' deps : ' +       block.must);
             var should = ('Block : ' + block.bem + ' shouldDeps : ' + block.should);
-            res.end('Hello World : ' + block);
+            res.end('Hello World : ' + all + '\n');
         } else {
             res.end('No block');
         }
@@ -81,11 +82,26 @@ function shouldResponse() {
 }
 
 function traverse(tree, callback) {
+    function proceedDeps(blockDeps) {
+        blockDeps.forEach(function(dep) {
+            callback(dep);
+            if (dep.bemObject) {
+                traverse(dep.bemObject, callback);
+            }
+        });
+    }
+
+    proceedDeps(tree.must);
+    proceedDeps(tree.should);
 }
 
 function flat(tree) {
-    var list = [];
+    var list = {}
+    traverse(tree, function(dep) {
+        dep.block && (list[dep.block] = dep);
+    });
 
+    return list;
 }
 
 walker.on('data', function (bemObject) {
