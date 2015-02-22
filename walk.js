@@ -1,12 +1,11 @@
 
+//TODO: Back
+//TODO: Normal cli tool
+//TODO: Server
+
 process.bin = process.title = 'TheHobbit';
 
-
-
-
 require('http').createServer(function (req, res) {
-
-
 
 
 var walk = require('bem-walk'),
@@ -15,13 +14,13 @@ var walker = walk(['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-pho
 
 var blockName = process.argv[2];
 
-//console.log('Block ' + block);
-
-var i = 0,j = 0;
+var i = 0, j = 0;
 
 var n = 0, p = 0;
 
 var blocks = {};
+
+
 function isBlock(bemObject) {
     return bemObject.block && !bemObject.elem && !bemObject.modName;
 }
@@ -32,6 +31,8 @@ function isBlockDep(bemDep) {
 
 
 function expandDeps(blockName, dep) {
+    //TODO: elem
+    //TODO: mod
     //TODO: elems -> []
     //TODO: mods -> []
     if (typeof dep == typeof '') return {block: dep};
@@ -59,26 +60,11 @@ function there(block) {
             });
         }
 
-        block.must = proceedDeps(block.must);
-        block.should = proceedDeps(block.should);
+        block.mustDeps = proceedDeps(block.mustDeps);
+        block.shouldDeps = proceedDeps(block.shouldDeps);
     }
 
     proceedBemObj(block);
-}
-
-function shouldResponse() {
-    if (n === p) {
-        var block = blocks[blockName];
-        if (block) {
-            there(block);
-            var all = Object.keys(flat(block));
-            var must = ('Block : ' + block.bem + ' deps : ' +       block.must);
-            var should = ('Block : ' + block.bem + ' shouldDeps : ' + block.should);
-            res.end('Hello World : ' + all + '\n');
-        } else {
-            res.end('No block');
-        }
-    }
 }
 
 function traverse(tree, callback) {
@@ -91,76 +77,75 @@ function traverse(tree, callback) {
         });
     }
 
-    proceedDeps(tree.must);
-    proceedDeps(tree.should);
+    proceedDeps(tree.mustDeps);
+    proceedDeps(tree.shouldDeps);
 }
 
 function flat(tree) {
     var list = {}
     traverse(tree, function(dep) {
+        //only blocks now
         dep.block && (list[dep.block] = dep);
     });
 
     return list;
 }
 
+function shouldResponse() {
+    if (n === p) {
+        var block = blocks[blockName];
+        if (block) {
+            there(block);
+            var all = flat(block);
+            res.end(blockName + ' : ' + Object.keys(all).join(', ') + '\n');
+        } else {
+            res.end('No such block\n');
+        }
+    }
+}
+
 walker.on('data', function (bemObject) {
-    i++;
     //TODO: Only blocks now
     if (!isBlock(bemObject)) return;
-    j++;
 
     if (bemObject.tech === 'deps.js') {
         //put in hash blockName --> blockObj
         blocks[bemObject.block] = blocks[bemObject.block] || bemObject;
-        blocks[bemObject.block].must = [];
-        blocks[bemObject.block].should = [];
+        blocks[bemObject.block].mustDeps = [];
+        blocks[bemObject.block].shouldDeps = [];
+
         n++;
         fs.readFile(bemObject.path, 'utf8', function(err, data) {
             if (err) throw err;
 
-            //TODO: Forgot about levels =(
-            function analDep(deps, should) {
-                [].concat(deps).forEach(function(dep) {
-                    //if (!isBlock(dep)) return;
-
-                    //console.log('Block : ' + bemObject.path + (should ? ' should ' : '') + ' deps : ' + dep.block);
-                    if (should) {
-                        blocks[bemObject.block].should.push(dep);
-                    } else {
-                        blocks[bemObject.block].must.push(dep);
-                    }
-                });
-
-            }
-
-
-
             var deps = eval(data);
+
             //TODO: Only tech:bemhml now
-            //TODO: No deps
+            //TODO: Forgot about levels =(
             [].concat(deps).forEach(function(dep) {
                 if (dep.tech) {
                     //tech: js, tmpl-spec.js
                     console.log('Unresolved tech: ' + dep.tech);
                     return;
                 }
-                dep.mustDeps && analDep(dep.mustDeps);
-                dep.shouldDeps && analDep(dep.shouldDeps, true);
+
+                //TODO: noDeps: []
+
+                [].concat(dep.mustDeps).forEach(function(dep) {
+                    dep && blocks[bemObject.block].mustDeps.push(dep);
+                });
+
+                [].concat(dep.shouldDeps).forEach(function(dep) {
+                    dep && blocks[bemObject.block].shouldDeps.push(dep);
+                });
             });
 
             p++;
             shouldResponse();
-            //var block = blocks[bemObject.block];
-            //console.log('Block : ' + block.bem + ' deps : ' +       block.must.length);
-            //console.log('Block : ' + block.bem + ' shouldDeps : ' + block.should.length);
         });
     };
-    //console.log(bemObject.path);
 }).on('end', function() {
     res.writeHead(200, {'Content-Type': 'text/plain'});
-    //console.log(i);
-    //console.log(j);
 }).on('error', function() {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('Error ! >_<');
