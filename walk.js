@@ -111,17 +111,41 @@ function shouldResponse() {
     }
 }
 
+function collectBemObject(bemObject) {
+    //put in hash blockName --> blockObj
+    blocks[bemObject.block] = blocks[bemObject.block] || bemObject;
+
+    DEPS_TYPES.forEach(function(depType) {
+        blocks[bemObject.block][depType] = [];
+    });
+}
+
+function collectDeps(bemObject, deps) {
+    //TODO: Only tech:bemhml now
+    //TODO: Forgot about levels =(
+    [].concat(deps).forEach(function(dep) {
+        if (dep.tech) {
+            //tech: js, tmpl-spec.js
+            console.log('Unresolved tech: ' + dep.tech);
+            return;
+        }
+
+        //TODO: noDeps: []
+        DEPS_TYPES.forEach(function(depType) {
+            [].concat(dep[depType]).forEach(function(dep) {
+                dep && blocks[bemObject.block][depType].push(dep);
+            });
+        });
+    });
+}
+
 walker.on('data', function (bemObject) {
     //TODO: Only blocks now
     if (!isBlock(bemObject)) return;
 
-    if (bemObject.tech === 'deps.js') {
-        //put in hash blockName --> blockObj
-        blocks[bemObject.block] = blocks[bemObject.block] || bemObject;
+    collectBemObject(bemObject);
 
-        DEPS_TYPES.forEach(function(depType) {
-            blocks[bemObject.block][depType] = [];
-        });
+    if (bemObject.tech === 'deps.js') {
 
         n++;
         fs.readFile(bemObject.path, 'utf8', function(err, data) {
@@ -129,22 +153,7 @@ walker.on('data', function (bemObject) {
 
             var deps = eval(data);
 
-            //TODO: Only tech:bemhml now
-            //TODO: Forgot about levels =(
-            [].concat(deps).forEach(function(dep) {
-                if (dep.tech) {
-                    //tech: js, tmpl-spec.js
-                    console.log('Unresolved tech: ' + dep.tech);
-                    return;
-                }
-
-                //TODO: noDeps: []
-                DEPS_TYPES.forEach(function(depType) {
-                    [].concat(dep[depType]).forEach(function(dep) {
-                        dep && blocks[bemObject.block][depType].push(dep);
-                    });
-                });
-            });
+            collectDeps(bemObject, deps);
 
             p++;
             shouldResponse();
