@@ -48,43 +48,35 @@ function expandDeps(blockName, dep) {
     return dep;
 }
 
-function there(block) {
-    function proceedBemObj(block) {
-        function proceedDeps(blockDeps) {
-            return blockDeps.map(function (dep) {
-                dep = expandDeps(block.block, dep);
-                if(isBlockDep(dep)) {
-                    if (!dep.bemObject) {
-                        dep.bemObject = blocks[dep.block];
-                        if (dep.bemObject) {
-                            proceedBemObj(dep.bemObject);
-                        }
-                    }
-                }
-                return dep;
-            });
+
+function there(tree) {
+
+    traverse(tree, function(dep) {
+        dep = expandDeps(dep.block, dep);
+        if (isBlockDep(dep)) {
+            if (!dep.bemObject) {
+                dep.bemObject = blocks[dep.block];
+            }
         }
 
-        DEPS_TYPES.forEach(function(depType) {
-            block[depType] = proceedDeps(block[depType]);
-        });
-    }
-
-    proceedBemObj(block);
+        return dep;
+    });
 }
+
 
 function traverse(tree, callback) {
     function proceedDeps(blockDeps) {
-        blockDeps.forEach(function(dep) {
-            callback(dep);
+        return blockDeps.map(function(dep) {
+            dep = callback(dep) || dep;
             if (dep.bemObject) {
                 traverse(dep.bemObject, callback);
             }
+            return dep;
         });
     }
 
     DEPS_TYPES.forEach(function(depType) {
-        proceedDeps(tree[depType]);
+        tree[depType] = proceedDeps(tree[depType]);
     });
 }
 
