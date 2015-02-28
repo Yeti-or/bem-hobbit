@@ -1,5 +1,3 @@
-
-//TODO: Back
 //TODO: Normal cli tool
 //TODO: Server
 
@@ -12,7 +10,7 @@ var walk = require('bem-walk'),
     fs = require('fs');
 
 var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks']
-var DEPS_TYPES =['mustDeps', 'shouldDeps'];
+var DEPS_TYPES = ['mustDeps', 'shouldDeps'];
 
 var walker = walk(LEVELS);
 
@@ -49,6 +47,29 @@ function expandDeps(blockName, dep) {
 }
 
 
+function back(bemObject) {
+    var list = {},
+        bemObjs = [bemObject];
+    while(bemObject = bemObjs.pop()) {
+        //bemObject = blocks[bemObject.block]
+        list[bemObject.block] = bemObject;
+        Object.keys(blocks).forEach(function(block) {
+            block = blocks[block];
+            DEPS_TYPES.forEach(function(depType) {
+                [].concat(block[depType]).forEach(function(dep) {
+                    dep = expandDeps(block.block, dep);
+                    if (dep.block === bemObject.block) {
+                        console.log(bemObject.block);
+                        bemObjs.push(block);
+                        list[block.block] = block;
+                    }
+                });
+            });
+        });
+    }
+    return list;
+}
+
 function there(tree) {
 
     traverse(tree, function(dep) {
@@ -62,7 +83,6 @@ function there(tree) {
         return dep;
     });
 }
-
 
 function traverse(tree, callback) {
     function proceedDeps(blockDeps) {
@@ -100,7 +120,9 @@ function shouldResponse() {
             } else {
                 there(block);
                 var all = flat(block);
+                var allb = back(block);
                 res.write(Object.keys(all).join(', ') + '\n');
+                res.write('Back: ' + Object.keys(allb).join(', ') + '\n');
             }
         });
         res.end('\t^_^\n');
