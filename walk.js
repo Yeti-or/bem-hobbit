@@ -1,21 +1,28 @@
-//TODO: Normal cli tool
+//TODO: Rewrite Architecture
+    //TODO: Add logger
+    //TODO: Error propagination
+    //TODO: Add walker
+    //TODO: Add JSDocs
+    //TODO: Add Linters 
+    //TODO: Write unit tests
 //TODO: Server
 
-process.bin = process.title = 'TheHobbit';
 
-require('http').createServer(function (req, res) {
+module.exports = function (target, options) {
 
+    console.log('^_^');
 
 var walk = require('bem-walk'),
     fs = require('fs');
 
+//TODO: HardCore Levels
 var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks']
 var DEPS_TYPES = ['mustDeps', 'shouldDeps'];
 
 var walker = walk(LEVELS);
 
 
-var blockName = process.argv[2];
+var blockName = target;
 
 var i = 0, j = 0;
 
@@ -33,6 +40,7 @@ function isBlockDep(bemDep) {
 }
 
 
+//Look at deps-normalizer by @floatdrop
 function expandDeps(blockName, dep) {
     //TODO: elem
     //TODO: mod
@@ -113,19 +121,25 @@ function flat(tree) {
 function shouldResponse() {
     if (n === p) {
         ((blockName && [blockName]) || Object.keys(blocks)).forEach(function(blockName) {
-            res.write(blockName + ' : ');
+            console.log(blockName + ' : ');
             block = blocks[blockName];
             if (!block) {
-                res.write('No such block\n')
+                console.log('No such block\n')
             } else {
                 there(block);
                 var all = flat(block);
                 var allb = back(block);
-                res.write(Object.keys(all).join(', ') + '\n');
-                res.write('Back: ' + Object.keys(allb).join(', ') + '\n');
+
+                console.log('\n==========\n');
+                var gothere = options && options.there;
+                var goback = options && options.back;
+                !gothere && !goback && (gothere = goback = true);
+                gothere && console.log('There: ' + Object.keys(all).join(', ') + '\n');
+                goback && console.log('Back: ' + Object.keys(allb).join(', ') + '\n');
+                console.log('\n==========\n');
             }
         });
-        res.end('\t^_^\n');
+        //res.end('\t^_^\n');
     }
 }
 
@@ -169,6 +183,7 @@ walker.on('data', function (bemObject) {
         fs.readFile(bemObject.path, 'utf8', function(err, data) {
             if (err) throw err;
 
+            //TODO: JSON.parse or vm.runInThisContext
             var deps = eval(data);
 
             collectDeps(bemObject, deps);
@@ -178,11 +193,12 @@ walker.on('data', function (bemObject) {
         });
     };
 }).on('end', function() {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
+    //res.writeHead(200, {'Content-Type': 'text/plain'});
+    console.log('end');
 }).on('error', function() {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end('Error ! >_<');
+    //res.writeHead(200, {'Content-Type': 'text/plain'});
+    //res.end('Error ! >_<');
+    console.log('Error');
 });
 
-}).listen(8042);
-console.log('Server running at http://127.0.0.1:8042/');
+};
