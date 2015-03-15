@@ -4,7 +4,7 @@ process.bin = process.title = 'TheHobbit';
 module.exports = require('coa').Cmd()
     .name(process.argv[1])
     .helpful()
-    .title('The Hobbit - There and Back')
+    .title('The Hobbit - There & Back')
     .opt()
         .name('version')
         .title('Come`on what can it be?')

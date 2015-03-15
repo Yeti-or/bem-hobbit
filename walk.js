@@ -1,10 +1,10 @@
+//TODO: Write unit tests
 //TODO: Rewrite Architecture
     //TODO: Add logger
     //TODO: Error propagination
     //TODO: Add walker
     //TODO: Add JSDocs
     //TODO: Add Linters 
-    //TODO: Write unit tests
 //TODO: Server
 
 
