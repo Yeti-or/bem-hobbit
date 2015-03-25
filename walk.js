@@ -10,7 +10,6 @@
 
 module.exports = function (target, options) {
 
-    console.log('^_^');
 
 var walk = require('bem-walk'),
     fs = require('fs');
@@ -67,7 +66,6 @@ function back(bemObject) {
                 [].concat(block[depType]).forEach(function(dep) {
                     dep = expandDeps(block.block, dep);
                     if (dep.block === bemObject.block) {
-                        console.log(bemObject.block);
                         bemObjs.push(block);
                         list[block.block] = block;
                     }
@@ -121,7 +119,6 @@ function flat(tree) {
 function shouldResponse() {
     if (n === p) {
         ((blockName && [blockName]) || Object.keys(blocks)).forEach(function(blockName) {
-            console.log(blockName + ' : ');
             block = blocks[blockName];
             if (!block) {
                 console.log('No such block\n')
