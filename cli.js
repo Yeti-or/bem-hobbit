@@ -38,7 +38,7 @@ module.exports = require('coa').Cmd()
     .act(function(opts, args) {
         var hobbit = require('./walk');
         hobbit(args.target, opts);
-        console.log('opts: ' + require('util').inspect(opts));
-        console.log('args: ' + require('util').inspect(args));
+        //console.log('opts: ' + require('util').inspect(opts));
+        //console.log('args: ' + require('util').inspect(args));
     })
     .run(process.argv.slice(2));

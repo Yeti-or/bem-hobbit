@@ -16,6 +16,7 @@ var walk = require('bem-walk'),
 
 //TODO: HardCore Levels
 var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks']
+LEVELS = ['common.blocks'];
 var DEPS_TYPES = ['mustDeps', 'shouldDeps'];
 
 var walker = walk(LEVELS);
@@ -168,34 +169,59 @@ function collectDeps(bemObject, deps) {
     });
 }
 
-walker.on('data', function (bemObject) {
-    //TODO: Only blocks now
-    if (!isBlock(bemObject)) return;
+var stream = require('stream').Writable({objectMode: true});
 
-    collectBemObject(bemObject);
+stream._write = function(chunk, encoding, next) {
+    console.dir(chunk);
+    next();
+}
 
+var depsMapper = require('stream').Transform({objectMode: true});
+
+depsMapper._transform = function(bemObject, encoding, next) {
+    //console.log(bemObject);
     if (bemObject.tech === 'deps.js') {
+    var data = fs.readFileSync(bemObject.path, 'utf8'),
+        deps = eval(data);
+        //this.push(deps);
+        bemObject.deps = deps;
+    }
+    this.push(bemObject);
+    next();
+}
 
-        n++;
-        fs.readFile(bemObject.path, 'utf8', function(err, data) {
-            if (err) throw err;
+walker
+    .pipe(depsMapper)
+    .pipe(stream);
 
-            //TODO: JSON.parse or vm.runInThisContext
-            var deps = eval(data);
-
-            collectDeps(bemObject, deps);
-
-            p++;
-            shouldResponse();
-        });
-    };
-}).on('end', function() {
-    //res.writeHead(200, {'Content-Type': 'text/plain'});
-    console.log('end');
-}).on('error', function() {
-    //res.writeHead(200, {'Content-Type': 'text/plain'});
-    //res.end('Error ! >_<');
-    console.log('Error');
-});
+//walker.on('data', function (bemObject) {
+//    //TODO: Only blocks now
+//    if (!isBlock(bemObject)) return;
+//
+//    collectBemObject(bemObject);
+//
+//    if (bemObject.tech === 'deps.js') {
+//
+//        n++;
+//        fs.readFile(bemObject.path, 'utf8', function(err, data) {
+//            if (err) throw err;
+//
+//            //TODO: JSON.parse or vm.runInThisContext
+//            var deps = eval(data);
+//
+//            collectDeps(bemObject, deps);
+//
+//            p++;
+//            shouldResponse();
+//        });
+//    };
+//}).on('end', function() {
+//    //res.writeHead(200, {'Content-Type': 'text/plain'});
+//    console.log('end');
+//}).on('error', function(error) {
+//    //res.writeHead(200, {'Content-Type': 'text/plain'});
+//    //res.end('Error ! >_<');
+//    console.log('Error' + error);
+//});
 
 };
