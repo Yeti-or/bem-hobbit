@@ -177,13 +177,20 @@ stream._write = function(chunk, encoding, next) {
     next();
 };
 
+stream.on('finish', function() {
+    shouldResponse();
+});
+
+
 var depsMapper = new Stream.Transform({objectMode: true});
 depsMapper._transform = function(bemObject, encoding, next) {
     if (bemObject.tech === 'deps.js') {
         var data = fs.readFileSync(bemObject.path, 'utf8'),
             deps = vm.runInThisContext(data);
         //this.push(deps);
-        bemObject.deps = deps;
+        collectBemObject(bemObject);
+        //bemObject.deps = deps;
+        collectDeps(bemObject, deps);
         this.push(bemObject);
     }
     //this.push(bemObject);
@@ -203,35 +210,5 @@ walker
     .pipe(onlyBlocks)
     .pipe(depsMapper)
     .pipe(stream);
-
-//walker.on('data', function (bemObject) {
-//    //TODO: Only blocks now
-//    if (!isBlock(bemObject)) return;
-//
-//    collectBemObject(bemObject);
-//
-//    if (bemObject.tech === 'deps.js') {
-//
-//        n++;
-//        fs.readFile(bemObject.path, 'utf8', function(err, data) {
-//            if (err) throw err;
-//
-//            //TODO: JSON.parse or vm.runInThisContext
-//            var deps = eval(data);
-//
-//            collectDeps(bemObject, deps);
-//
-//            p++;
-//            shouldResponse();
-//        });
-//    };
-//}).on('end', function() {
-//    //res.writeHead(200, {'Content-Type': 'text/plain'});
-//    console.log('end');
-//}).on('error', function(error) {
-//    //res.writeHead(200, {'Content-Type': 'text/plain'});
-//    //res.end('Error ! >_<');
-//    console.log('Error' + error);
-//});
 
 };
