@@ -12,6 +12,8 @@ module.exports = function (target, options) {
 
 
 var walk = require('bem-walk'),
+    Stream = require('stream'),
+    vm = require('vm'),
     fs = require('fs');
 
 //TODO: HardCore Levels
@@ -169,28 +171,36 @@ function collectDeps(bemObject, deps) {
     });
 }
 
-var stream = require('stream').Writable({objectMode: true});
-
+var stream = new Stream.Writable({objectMode: true});
 stream._write = function(chunk, encoding, next) {
     console.dir(chunk);
     next();
-}
+};
 
-var depsMapper = require('stream').Transform({objectMode: true});
-
+var depsMapper = new Stream.Transform({objectMode: true});
 depsMapper._transform = function(bemObject, encoding, next) {
-    //console.log(bemObject);
     if (bemObject.tech === 'deps.js') {
-    var data = fs.readFileSync(bemObject.path, 'utf8'),
-        deps = eval(data);
+        var data = fs.readFileSync(bemObject.path, 'utf8'),
+            deps = vm.runInThisContext(data);
         //this.push(deps);
         bemObject.deps = deps;
+        this.push(bemObject);
     }
-    this.push(bemObject);
+    //this.push(bemObject);
     next();
-}
+};
+
+var onlyBlocks = new Stream.Transform({objectMode: true});
+onlyBlocks._transform = function(bemObject, encoding, next) {
+    isBlock(bemObject) && this.push(bemObject);
+    next();
+};
 
 walker
+    .on('error', function(error) {
+        console.log('Error');
+    })
+    .pipe(onlyBlocks)
     .pipe(depsMapper)
     .pipe(stream);
 
