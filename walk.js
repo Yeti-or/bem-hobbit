@@ -17,7 +17,7 @@ var walk = require('bem-walk'),
     fs = require('fs');
 
 //TODO: HardCore Levels
-var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks']
+var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks'];
 LEVELS = ['common.blocks'];
 var DEPS_TYPES = ['mustDeps', 'shouldDeps'];
 
@@ -60,13 +60,15 @@ function expandDeps(blockName, dep) {
 function back(bemObject) {
     var list = {},
         bemObjs = [bemObject];
-    while(bemObject = bemObjs.pop()) {
+    while((bemObject = bemObjs.pop())) {
         //bemObject = blocks[bemObject.block]
         list[bemObject.block] = bemObject;
-        Object.keys(blocks).forEach(function(block) {
-            block = blocks[block];
+        for (var blockName in blocks) {
+            var block = blocks[blockName];
+            /*jshint -W083 */
             DEPS_TYPES.forEach(function(depType) {
                 [].concat(block[depType]).forEach(function(dep) {
+                /*jshint +W083 */
                     dep = expandDeps(block.block, dep);
                     if (dep.block === bemObject.block) {
                         bemObjs.push(block);
@@ -74,7 +76,7 @@ function back(bemObject) {
                     }
                 });
             });
-        });
+        }
     }
     return list;
 }
@@ -110,7 +112,7 @@ function traverse(tree, callback) {
 }
 
 function flat(tree) {
-    var list = {}
+    var list = {};
     traverse(tree, function(dep) {
         //only blocks now
         dep.block && (list[dep.block] = dep);
@@ -124,7 +126,7 @@ function shouldResponse() {
         ((blockName && [blockName]) || Object.keys(blocks)).forEach(function(blockName) {
             block = blocks[blockName];
             if (!block) {
-                console.log('No such block\n')
+                console.log('No such block\n');
             } else {
                 there(block);
                 var all = flat(block);
