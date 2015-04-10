@@ -1,10 +1,12 @@
 //TODO: Write unit tests
 //TODO: Rewrite Architecture
+    //TODO: Think about Levels
     //TODO: Add logger
     //TODO: Error propagination
     //TODO: Add walker
     //TODO: Add JSDocs
     //TODO: Add Linters 
+//TODO: --graph
 //TODO: Server
 
 
