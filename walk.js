@@ -12,18 +12,22 @@
 
 module.exports = function (target, options) {
 
+var DepGraph = require('dependency-graph').DepGraph;
+var normalize = require('deps-normalize');
+var graph = new DepGraph();
 
 var walk = require('bem-walk'),
+    bemNaming = require('bem-naming'),
     Stream = require('stream'),
     vm = require('vm'),
     fs = require('fs');
 
 //TODO: HardCore Levels
 var LEVELS = ['common.blocks', 'desktop.blocks', 'touch.blocks', 'touch-phone.blocks', 'touch-pad.blocks'];
-LEVELS = ['common.blocks'];
+//LEVELS = ['common.blocks'];
 var DEPS_TYPES = ['mustDeps', 'shouldDeps'];
 
-var walker = walk(LEVELS);
+//var walker = walk(LEVELS);
 
 
 var blockName = target;
@@ -185,6 +189,7 @@ stream.on('finish', function() {
     shouldResponse();
 });
 
+var objectCollector = new Stream.Transform({objectMode: true});
 
 var depsMapper = new Stream.Transform({objectMode: true});
 depsMapper._transform = function(bemObject, encoding, next) {
@@ -208,16 +213,118 @@ depsMapper._transform = function(bemObject, encoding, next) {
 
 var onlyBlocks = new Stream.Transform({objectMode: true});
 onlyBlocks._transform = function(bemObject, encoding, next) {
-    isBlock(bemObject) && this.push(bemObject);
+    cre
     next();
 };
 
+
+function process(bemObject) {
+    console.log('^_^');
+    //Add Node
+    var bem_id = bemNaming.stringify(bemObject.entity);
+
+    graph.hasNode(bem_id) || graph.addNode(bem_id);
+
+    if (bemObject.tech === 'deps.js') {
+        var data = fs.readFileSync(bemObject.path, 'utf8'),
+            deps = vm.runInThisContext(data);
+         
+        [].concat(deps).forEach(function(dep) {
+            if (dep.tech) {
+                //tech: js, tmpl-spec.js
+                //console.log('Unresolved tech: ' + dep.tech);
+                //return;
+            } else {
+                //Add Connections
+                DEPS_TYPES.forEach(function(depType) {
+                    [].concat(dep[depType]).forEach(function(dep) {
+                        if (dep) {
+                            dep.block || (dep.block = bemObject.entity.block);
+                            dep.elems && !Array.isArray(dep.elems) && (dep.elems = [dep.elems]);
+
+                            normalize(dep).forEach(function(normDep) {
+                                var node = bemNaming.stringify(normDep);
+                                graph.hasNode(node) || graph.addNode(node);
+                                graph.addDependency(node, bem_id);
+                            });
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+}
+
+module.exports = function (levels, cb) {
+cb(null, {hello:42});
+/*
+var walker = walk(LEVELS);
+
+    walker
+        .on('error', function(error) {
+            cb(error);
+            console.log('Error');
+        })
+        .on('data', process)
+        //.on('data', function(){})
+        .on('end', function() {
+            console.log(graph.nodes);
+            if (target) {
+                console.log('There: ' +  graph.dependenciesOf(target));
+                console.log('Back: ' + graph.dependantsOf(target));
+                console.dir(graph.outgoingEdges[target]);
+                //console.dir(graph.nodes);
+                
+            } else {
+                var nodes = [];
+                var edges = [];
+                Object.keys(graph.nodes).forEach(function(target) {
+                    nodes.push({id: target, label: target});
+                    graph.incomingEdges[target].forEach(function(dep) {
+                        edges.push({from: target, to: dep});
+                    });
+                }); 
+
+                cb(null, {nodes: nodes, edges: edges});
+            }
+            //console.log('Finish');
+        })
+
+    */
+};
+
+/*
 walker
     .on('error', function(error) {
         console.log('Error');
     })
-    .pipe(onlyBlocks)
-    .pipe(depsMapper)
-    .pipe(stream);
+    .on('data', process)
+    //.on('data', function(){})
+    .on('end', function() {
+        //console.log(graph.nodes);
+        if (target) {
+            console.log('There: ' +  graph.dependenciesOf(target));
+            console.log('Back: ' + graph.dependantsOf(target));
+            console.dir(graph.outgoingEdges[target]);
+            //console.dir(graph.nodes);
+
+        } else {
+            var nodes = [];
+            var edges = [];
+            Object.keys(graph.nodes).forEach(function(target) {
+                nodes.push({id: target, label: target});
+                graph.incomingEdges[target].forEach(function(dep) {
+                    edges.push({from: target, to: dep});
+                });
+            });
+        }
+        //console.log('Finish');
+    })
+    //.pipe(onlyBlocks)
+    //.pipe(depsMapper)
+    //.pipe(stream);
+
+ */
 
 };
