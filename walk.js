@@ -192,9 +192,14 @@ depsMapper._transform = function(bemObject, encoding, next) {
         var data = fs.readFileSync(bemObject.path, 'utf8'),
             deps = vm.runInThisContext(data);
         //this.push(deps);
+
+        //Add Node
         collectBemObject(bemObject);
         //bemObject.deps = deps;
+
+        //Add Connections
         collectDeps(bemObject, deps);
+
         this.push(bemObject);
     }
     //this.push(bemObject);
