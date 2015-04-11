@@ -1,5 +1,5 @@
 {
-  "name": "TheHobbit",
+  "name": "bem-hobbit",
   "version": "0.0.1",
   "description": "Analyze BEM deps",
   "main": "walk.js",
@@ -25,7 +25,10 @@
   },
   "homepage": "https://github.com/YetiOr/deps-analyzer",
   "dependencies": {
+    "bem-naming": "^0.5.1",
+    "bem-walk": "bem/bem-walk",
     "coa": "0.4.1",
-    "bem-walk": "0.0.4"
+    "dependency-graph": "^0.1.0",
+    "deps-normalize": "^2.3.1"
   }
 }
