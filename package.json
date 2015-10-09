@@ -26,9 +26,9 @@
   "homepage": "https://github.com/YetiOr/deps-analyzer",
   "dependencies": {
     "bem-naming": "^0.5.1",
-    "bem-walk": "bem/bem-walk",
-    "coa": "0.4.1",
-    "dependency-graph": "^0.1.0",
-    "deps-normalize": "^2.3.1"
+    "bem-walk": "v1.0.0-alpha1",
+    "coa": "1.0.1",
+    "dependency-graph": "^0.4.1",
+    "deps-normalize": "^2.4.0"
   }
 }
