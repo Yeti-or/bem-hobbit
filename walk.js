@@ -5,7 +5,7 @@
     //TODO: Error propagination
     //TODO: Add walker
     //TODO: Add JSDocs
-    //TODO: Add Linters 
+    //TODO: Add Linters
 //TODO: --graph
 //TODO: Server
 
@@ -22,7 +22,7 @@ var fs = require('fs'),
 
 
 module.exports = function (levels, cb) {
-    var walker = walk(levels);
+    var walker = walk([].concat(levels));
 
     var nodes = {};
 
@@ -41,12 +41,12 @@ module.exports = function (levels, cb) {
 
             t.levels.push(data.level);
             t.techs.push(data.tech);
-        } 
+        }
 
         if (data.tech === 'deps.js') {
             var depsData = fs.readFileSync(data.path, 'utf8'),
                 deps = vm.runInThisContext(depsData);
-             
+
             [].concat(deps).forEach(function(dep) {
                 //Add Connections
                 DEPS_TYPES.forEach(function(depType) {
@@ -72,7 +72,7 @@ module.exports = function (levels, cb) {
         }
 
     }
-    
+
 
     walker
         .on('error', function(error) {
@@ -89,6 +89,7 @@ module.exports = function (levels, cb) {
                 });
             });
 
+            console.log({ nodes: nodes, edges: edges });
             cb(null, { nodes: nodes, edges: edges });
         });
 };
